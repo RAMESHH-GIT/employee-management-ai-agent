@@ -82,7 +82,7 @@ function App() {
     if (isLoggedIn) {
       getEmployees("", "", "", 1);
     }
-  }, [isLoggedIn]);
+  }, [isLoggedIn,getEmployees]);
 
   // LOGIN SUCCESS
   const handleLoginSuccess = (userData) => {

@@ -41,7 +41,7 @@ function AIAssistant() {
   // Load saved conversations when page opens
   useEffect(() => {
     fetchConversations();
-  }, []);
+  }, [fetchConversations]);
 
   // Get all conversations
   const fetchConversations = async () => {
