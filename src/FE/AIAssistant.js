@@ -1,4 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
 
 import {
   Box,
@@ -21,32 +25,20 @@ import {
   SmartToy,
   Person,
 } from "@mui/icons-material";
+
 const API_URL = process.env.REACT_APP_API_URL;
+
 function AIAssistant() {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Current conversation ID
   const [conversationId, setConversationId] = useState(null);
-
-  // All saved conversations
   const [conversations, setConversations] = useState([]);
 
-  // Get JWT token
-  const getToken = () => {
-    return localStorage.getItem("token");
-  };
-
-  // Load saved conversations when page opens
-  useEffect(() => {
-    fetchConversations();
-  }, [fetchConversations]);
-
-  // Get all conversations
-  const fetchConversations = async () => {
+  const fetchConversations = useCallback(async () => {
     try {
-      const token = getToken();
+      const token = localStorage.getItem("token");
 
       const response = await fetch(
         `${API_URL}/api/ai/conversations`,
@@ -72,9 +64,12 @@ function AIAssistant() {
         error
       );
     }
-  };
+  }, []);
 
-  // Load one conversation
+  useEffect(() => {
+    fetchConversations();
+  }, [fetchConversations]);
+
   const handleSelectConversation = async (
     selectedConversationId
   ) => {
@@ -83,7 +78,7 @@ function AIAssistant() {
     try {
       setLoading(true);
 
-      const token = getToken();
+      const token = localStorage.getItem("token");
 
       const response = await fetch(
         `${API_URL}/api/ai/conversation/${selectedConversationId}`,
@@ -120,7 +115,6 @@ function AIAssistant() {
     }
   };
 
-  // Send message
   const handleSend = async (e) => {
     e.preventDefault();
 
@@ -128,7 +122,6 @@ function AIAssistant() {
 
     const userMessage = message.trim();
 
-    // Show user message immediately
     setMessages((prev) => [
       ...prev,
       {
@@ -141,18 +134,16 @@ function AIAssistant() {
     setLoading(true);
 
     try {
-      const token = getToken();
+      const token = localStorage.getItem("token");
 
       const response = await fetch(
         `${API_URL}/api/ai/chat`,
         {
           method: "POST",
-
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-
           body: JSON.stringify({
             message: userMessage,
             conversationId: conversationId,
@@ -168,14 +159,12 @@ function AIAssistant() {
         );
       }
 
-      // Save conversation ID
       if (data.conversationId) {
         setConversationId(
           data.conversationId
         );
       }
 
-      // Add AI response
       setMessages((prev) => [
         ...prev,
         {
@@ -184,7 +173,6 @@ function AIAssistant() {
         },
       ]);
 
-      // Refresh conversation list
       fetchConversations();
     } catch (error) {
       console.error("AI error:", error);
@@ -201,7 +189,6 @@ function AIAssistant() {
     }
   };
 
-  // Start a new chat
   const handleNewChat = () => {
     if (loading) return;
 
@@ -211,393 +198,297 @@ function AIAssistant() {
   };
 
   return (
-    <Card
-      variant="outlined"
+    <Box
       sx={{
-        height: 500,
+        height: "100%",
         display: "flex",
-        overflow: "hidden",
+        flexDirection: "column",
+        bgcolor: "#f7f9fc",
       }}
     >
-      {/* LEFT - CONVERSATIONS */}
-
+      {/* Header */}
       <Box
         sx={{
-          width: 260,
-          borderRight: "1px solid",
-          borderColor: "divider",
+          p: 2,
           display: "flex",
-          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "space-between",
+          bgcolor: "white",
+          borderBottom: "1px solid #e0e0e0",
         }}
       >
-        {/* Sidebar Header */}
+        <Stack
+          direction="row"
+          spacing={1}
+          alignItems="center"
+        >
+          <SmartToy color="primary" />
 
-        <Box sx={{ p: 2 }}>
           <Typography
             variant="h6"
             fontWeight={600}
           >
             AI Assistant
           </Typography>
+        </Stack>
 
-          <Button
-            fullWidth
-            variant="outlined"
-            startIcon={<Add />}
-            onClick={handleNewChat}
-            disabled={loading}
-            sx={{
-              mt: 2,
-              textTransform: "none",
-            }}
-          >
-            New Chat
-          </Button>
-        </Box>
-
-        <Divider />
-
-        {/* Previous Chats */}
-
-        <Box
-          sx={{
-            px: 2,
-            py: 1.5,
-          }}
+        <Button
+          size="small"
+          variant="outlined"
+          startIcon={<Add />}
+          onClick={handleNewChat}
+          disabled={loading}
         >
-          <Typography
-            variant="caption"
-            color="text.secondary"
-            fontWeight={600}
-          >
-            PREVIOUS CHATS
-          </Typography>
-        </Box>
-
-        <List
-          sx={{
-            px: 1,
-            overflowY: "auto",
-            flex: 1,
-          }}
-        >
-          {conversations.length === 0 ? (
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              sx={{ px: 1, py: 2 }}
-            >
-              No previous conversations
-            </Typography>
-          ) : (
-            conversations.map((conversation) => (
-              <ListItemButton
-                key={
-                  conversation.conversationId
-                }
-                selected={
-                  conversationId ===
-                  conversation.conversationId
-                }
-                onClick={() =>
-                  handleSelectConversation(
-                    conversation.conversationId
-                  )
-                }
-                disabled={loading}
-                sx={{
-                  borderRadius: 1,
-                  mb: 0.5,
-                }}
-              >
-                <ListItemText
-                  primary={
-                    conversation.title
-                  }
-                  primaryTypographyProps={{
-                    noWrap: true,
-                    fontSize: 14,
-                  }}
-                />
-              </ListItemButton>
-            ))
-          )}
-        </List>
+          New Chat
+        </Button>
       </Box>
 
-      {/* RIGHT - CHAT */}
-
+      {/* Main Content */}
       <Box
         sx={{
           flex: 1,
           display: "flex",
-          flexDirection: "column",
-          minWidth: 0,
+          minHeight: 0,
         }}
       >
-        {/* Chat Header */}
-
+        {/* Conversations */}
         <Box
           sx={{
-            px: 3,
-            py: 2,
-            borderBottom: "1px solid",
-            borderColor: "divider",
+            width: 180,
+            borderRight: "1px solid #e0e0e0",
+            bgcolor: "white",
+            overflowY: "auto",
           }}
         >
-          <Stack
-            direction="row"
-            spacing={1}
-            alignItems="center"
-          >
-            <SmartToy color="primary" />
-
-            <Typography
-              variant="h6"
-              fontWeight={600}
-            >
-              Employee AI Assistant
-            </Typography>
-          </Stack>
-
           <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={{ mt: 0.5 }}
+            variant="subtitle2"
+            sx={{
+              p: 1.5,
+              fontWeight: 600,
+            }}
           >
-            Ask questions about employees.
+            Conversations
           </Typography>
+
+          <Divider />
+
+          <List dense>
+            {conversations.length === 0 ? (
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ p: 2 }}
+              >
+                No conversations
+              </Typography>
+            ) : (
+              conversations.map((conversation) => (
+                <ListItemButton
+                  key={
+                    conversation.conversationId
+                  }
+                  selected={
+                    conversation.conversationId ===
+                    conversationId
+                  }
+                  onClick={() =>
+                    handleSelectConversation(
+                      conversation.conversationId
+                    )
+                  }
+                >
+                  <ListItemText
+                    primary={
+                      conversation.title ||
+                      "New Conversation"
+                    }
+                    primaryTypographyProps={{
+                      fontSize: 13,
+                      noWrap: true,
+                    }}
+                  />
+                </ListItemButton>
+              ))
+            )}
+          </List>
         </Box>
 
-        {/* Messages */}
-
+        {/* Chat Area */}
         <Box
           sx={{
             flex: 1,
-            overflowY: "auto",
-            p: 3,
-            backgroundColor: "#fafafa",
+            display: "flex",
+            flexDirection: "column",
+            minWidth: 0,
           }}
         >
-          {messages.length === 0 ? (
-            <Box
-              sx={{
-                height: "100%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
+          {/* Messages */}
+          <Box
+            sx={{
+              flex: 1,
+              overflowY: "auto",
+              p: 2,
+            }}
+          >
+            {messages.length === 0 ? (
               <Box
                 sx={{
+                  height: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
                   textAlign: "center",
-                  maxWidth: 400,
                 }}
               >
-                <SmartToy
-                  sx={{
-                    fontSize: 42,
-                    color: "text.secondary",
-                    mb: 1,
-                  }}
-                />
-
-                <Typography
-                  variant="h6"
-                  gutterBottom
-                >
-                  How can I help?
-                </Typography>
-
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                >
-                  Ask something like "Show me React
-                  employees in Hyderabad."
-                </Typography>
-              </Box>
-            </Box>
-          ) : (
-            <Stack spacing={2}>
-              {messages.map((item, index) => {
-                const isUser =
-                  item.role === "user";
-
-                return (
-                  <Box
-                    key={index}
-                    sx={{
-                      display: "flex",
-                      justifyContent: isUser
-                        ? "flex-end"
-                        : "flex-start",
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        display: "flex",
-                        gap: 1,
-                        maxWidth: "75%",
-                        alignItems: "flex-start",
-                      }}
-                    >
-                      {!isUser && (
-                        <SmartToy
-                          fontSize="small"
-                          color="primary"
-                          sx={{ mt: 1 }}
-                        />
-                      )}
-
-                      <Box>
-                        <Typography
-                          variant="caption"
-                          color="text.secondary"
-                          sx={{
-                            display: "block",
-                            mb: 0.5,
-                          }}
-                        >
-                          {isUser
-                            ? "You"
-                            : "AI"}
-                        </Typography>
-
-                        <PaperMessage
-                          isUser={isUser}
-                        >
-                          {item.content}
-                        </PaperMessage>
-                      </Box>
-
-                      {isUser && (
-                        <Person
-                          fontSize="small"
-                          color="action"
-                          sx={{ mt: 1 }}
-                        />
-                      )}
-                    </Box>
-                  </Box>
-                );
-              })}
-
-              {loading && (
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 1,
-                  }}
-                >
+                <Box>
                   <SmartToy
-                    fontSize="small"
-                    color="primary"
+                    sx={{
+                      fontSize: 48,
+                      color: "primary.main",
+                      mb: 1,
+                    }}
                   />
 
-                  <CircularProgress size={18} />
+                  <Typography
+                    variant="h6"
+                    gutterBottom
+                  >
+                    How can I help?
+                  </Typography>
 
                   <Typography
                     variant="body2"
                     color="text.secondary"
                   >
-                    Thinking...
+                    Ask me about employees,
+                    skills, locations or company
+                    information.
                   </Typography>
                 </Box>
-              )}
-            </Stack>
-          )}
-        </Box>
+              </Box>
+            ) : (
+              <Stack spacing={2}>
+                {messages.map(
+                  (msg, index) => {
+                    const isUser =
+                      msg.role === "user";
 
-        {/* Input */}
+                    return (
+                      <Box
+                        key={index}
+                        sx={{
+                          display: "flex",
+                          justifyContent: isUser
+                            ? "flex-end"
+                            : "flex-start",
+                        }}
+                      >
+                        <Card
+                          sx={{
+                            maxWidth: "85%",
+                            p: 1.5,
+                            bgcolor: isUser
+                              ? "primary.main"
+                              : "white",
+                            color: isUser
+                              ? "white"
+                              : "text.primary",
+                            borderRadius: 2,
+                          }}
+                        >
+                          <Stack
+                            direction="row"
+                            spacing={1}
+                            alignItems="flex-start"
+                          >
+                            {isUser ? (
+                              <Person fontSize="small" />
+                            ) : (
+                              <SmartToy fontSize="small" />
+                            )}
 
-        <Box
-          component="form"
-          onSubmit={handleSend}
-          sx={{
-            p: 2,
-            borderTop: "1px solid",
-            borderColor: "divider",
-            backgroundColor: "#ffffff",
-          }}
-        >
-          <Stack
-            direction="row"
-            spacing={1}
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                whiteSpace:
+                                  "pre-wrap",
+                                wordBreak:
+                                  "break-word",
+                              }}
+                            >
+                              {msg.content}
+                            </Typography>
+                          </Stack>
+                        </Card>
+                      </Box>
+                    );
+                  }
+                )}
+
+                {loading && (
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent:
+                        "flex-start",
+                    }}
+                  >
+                    <Card
+                      sx={{
+                        p: 1.5,
+                        bgcolor: "white",
+                      }}
+                    >
+                      <CircularProgress
+                        size={20}
+                      />
+                    </Card>
+                  </Box>
+                )}
+              </Stack>
+            )}
+          </Box>
+
+          {/* Input */}
+          <Box
+            component="form"
+            onSubmit={handleSend}
+            sx={{
+              p: 1.5,
+              bgcolor: "white",
+              borderTop:
+                "1px solid #e0e0e0",
+            }}
           >
-            <TextField
-              fullWidth
-              size="small"
-              variant="outlined"
-              placeholder="Ask about employees..."
-              value={message}
-              onChange={(e) =>
-                setMessage(e.target.value)
-              }
-              disabled={loading}
-            />
-
-            <IconButton
-              type="submit"
-              color="primary"
-              disabled={
-                loading || !message.trim()
-              }
-              sx={{
-                border: "1px solid",
-                borderColor: "primary.main",
-                borderRadius: 1,
-                width: 42,
-                height: 40,
-              }}
+            <Stack
+              direction="row"
+              spacing={1}
             >
-              <Send />
-            </IconButton>
-          </Stack>
+              <TextField
+                fullWidth
+                size="small"
+                placeholder="Ask AI something..."
+                value={message}
+                onChange={(e) =>
+                  setMessage(e.target.value)
+                }
+                disabled={loading}
+              />
+
+              <IconButton
+                type="submit"
+                color="primary"
+                disabled={
+                  loading ||
+                  !message.trim()
+                }
+              >
+                <Send />
+              </IconButton>
+            </Stack>
+          </Box>
         </Box>
       </Box>
-    </Card>
-  );
-}
-
-/*
-  Small message bubble component.
-  Only controls presentation.
-*/
-function PaperMessage({
-  children,
-  isUser,
-}) {
-  return (
-    <Box
-      sx={{
-        px: 2,
-        py: 1.5,
-        borderRadius: 2,
-        backgroundColor: isUser
-          ? "primary.main"
-          : "#ffffff",
-        color: isUser
-          ? "primary.contrastText"
-          : "text.primary",
-        border: isUser
-          ? "none"
-          : "1px solid",
-        borderColor: "divider",
-        whiteSpace: "pre-wrap",
-        wordBreak: "break-word",
-      }}
-    >
-      <Typography
-        variant="body2"
-        sx={{
-          whiteSpace: "pre-wrap",
-          wordBreak: "break-word",
-        }}
-      >
-        {children}
-      </Typography>
     </Box>
   );
 }

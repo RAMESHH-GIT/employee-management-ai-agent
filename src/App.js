@@ -1,4 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
 import Login from "./FE/Login";
 import AIAssistant from "./FE/AIAssistant";
 import { Drawer, Fab } from "@mui/material";
@@ -38,7 +42,9 @@ import {
   PersonAdd,
   SmartToy,
 } from "@mui/icons-material";
+
 const API_URL = process.env.REACT_APP_API_URL;
+
 function App() {
   // AUTHENTICATION
   const [isLoggedIn, setIsLoggedIn] = useState(
@@ -48,6 +54,7 @@ function App() {
   const [user, setUser] = useState(
     JSON.parse(localStorage.getItem("user")) || null
   );
+
   const [aiOpen, setAiOpen] = useState(false);
 
   // EMPLOYEE STATE
@@ -78,11 +85,89 @@ function App() {
 
   const limit = 5;
 
+  // GET EMPLOYEES
+  const getEmployees = useCallback(
+    async (
+      searchValue,
+      skillValue,
+      locationValue,
+      pageValue
+    ) => {
+      try {
+        setLoading(true);
+        setError("");
+
+        const params = new URLSearchParams();
+
+        if (searchValue.trim()) {
+          params.append(
+            "search",
+            searchValue.trim()
+          );
+        }
+
+        if (skillValue) {
+          params.append("skill", skillValue);
+        }
+
+        if (locationValue) {
+          params.append(
+            "location",
+            locationValue
+          );
+        }
+
+        params.append("page", pageValue);
+        params.append("limit", limit);
+
+        const response = await fetch(
+          `${API_URL}/api/employees?${params.toString()}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem(
+                "token"
+              )}`,
+            },
+          }
+        );
+
+        if (!response.ok) {
+          const errorData =
+            await response.json();
+
+          throw new Error(
+            errorData.message ||
+              "Failed to fetch employees"
+          );
+        }
+
+        const data = await response.json();
+
+        setEmployees(data.employees);
+        setCurrentPage(data.currentPage);
+        setTotalPages(data.totalPages);
+        setTotalEmployees(
+          data.totalEmployees
+        );
+      } catch (error) {
+        console.log(
+          "Error fetching employees:",
+          error
+        );
+
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
+    },
+    []
+  );
+
   useEffect(() => {
     if (isLoggedIn) {
       getEmployees("", "", "", 1);
     }
-  }, [isLoggedIn,getEmployees]);
+  }, [isLoggedIn, getEmployees]);
 
   // LOGIN SUCCESS
   const handleLoginSuccess = (userData) => {
@@ -100,69 +185,14 @@ function App() {
     setEmployees([]);
   };
 
-  // GET EMPLOYEES
-  const getEmployees = async (
-    searchValue = search,
-    skillValue = skillFilter,
-    locationValue = locationFilter,
-    pageValue = currentPage
-  ) => {
-    try {
-      setLoading(true);
-      setError("");
-
-      const params = new URLSearchParams();
-
-      if (searchValue.trim()) {
-        params.append("search", searchValue.trim());
-      }
-
-      if (skillValue) {
-        params.append("skill", skillValue);
-      }
-
-      if (locationValue) {
-        params.append("location", locationValue);
-      }
-
-      params.append("page", pageValue);
-      params.append("limit", limit);
-
-      const response = await fetch(
-        `${API_URL}/api/employees?${params.toString()}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-
-        throw new Error(
-          errorData.message || "Failed to fetch employees"
-        );
-      }
-
-      const data = await response.json();
-
-      setEmployees(data.employees);
-      setCurrentPage(data.currentPage);
-      setTotalPages(data.totalPages);
-      setTotalEmployees(data.totalEmployees);
-    } catch (error) {
-      console.log("Error fetching employees:", error);
-
-      setError(error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // SEARCH
   const handleSearch = () => {
-    getEmployees(search, skillFilter, locationFilter, 1);
+    getEmployees(
+      search,
+      skillFilter,
+      locationFilter,
+      1
+    );
   };
 
   // CLEAR SEARCH
@@ -176,7 +206,12 @@ function App() {
 
   // PAGE CHANGE
   const handlePageChange = (event, page) => {
-    getEmployees(search, skillFilter, locationFilter, page);
+    getEmployees(
+      search,
+      skillFilter,
+      locationFilter,
+      page
+    );
   };
 
   // EMPLOYEE INPUT CHANGE
@@ -255,7 +290,9 @@ function App() {
             method: "PUT",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
+              Authorization: `Bearer ${localStorage.getItem(
+                "token"
+              )}`,
             },
             body: JSON.stringify(employeeData),
           }
@@ -267,7 +304,9 @@ function App() {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
+              Authorization: `Bearer ${localStorage.getItem(
+                "token"
+              )}`,
             },
             body: JSON.stringify(employeeData),
           }
@@ -275,10 +314,12 @@ function App() {
       }
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData =
+          await response.json();
 
         throw new Error(
-          errorData.message || "Operation failed"
+          errorData.message ||
+            "Operation failed"
         );
       }
 
@@ -339,16 +380,20 @@ function App() {
         {
           method: "DELETE",
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${localStorage.getItem(
+              "token"
+            )}`,
           },
         }
       );
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData =
+          await response.json();
 
         throw new Error(
-          errorData.message || "Delete failed"
+          errorData.message ||
+            "Delete failed"
         );
       }
 
@@ -361,7 +406,10 @@ function App() {
         currentPage
       );
     } catch (error) {
-      console.log("Error deleting employee:", error);
+      console.log(
+        "Error deleting employee:",
+        error
+      );
 
       setError(error.message);
     } finally {
@@ -385,7 +433,11 @@ function App() {
 
   // SHOW LOGIN PAGE
   if (!isLoggedIn) {
-    return <Login onLoginSuccess={handleLoginSuccess} />;
+    return (
+      <Login
+        onLoginSuccess={handleLoginSuccess}
+      />
+    );
   }
 
   // SHOW DASHBOARD
@@ -577,35 +629,37 @@ function App() {
                 AI Assistant
               </Typography>
             </Stack>
-<Fab
-  color="primary"
-  onClick={() => setAiOpen(true)}
-  sx={{
-    position: "fixed",
-    right: 24,
-    bottom: 24,
-  }}
->
-  <SmartToyIcon />
-</Fab>
 
-<Drawer
-  anchor="right"
-  open={aiOpen}
-  onClose={() => setAiOpen(false)}
->
-  <Box
-    sx={{
-      width: {
-        xs: "100vw",
-        sm: 450,
-      },
-      height: "100vh",
-    }}
-  >
-    <AIAssistant />
-  </Box>
-</Drawer>
+            <Fab
+              color="primary"
+              onClick={() => setAiOpen(true)}
+              sx={{
+                position: "fixed",
+                right: 24,
+                bottom: 24,
+              }}
+            >
+              <SmartToyIcon />
+            </Fab>
+
+            <Drawer
+              anchor="right"
+              open={aiOpen}
+              onClose={() => setAiOpen(false)}
+            >
+              <Box
+                sx={{
+                  width: {
+                    xs: "100vw",
+                    sm: 450,
+                  },
+                  height: "100vh",
+                }}
+              >
+                <AIAssistant />
+              </Box>
+            </Drawer>
+
             {/* <AIAssistant /> */}
           </CardContent>
         </Card>
@@ -909,7 +963,10 @@ function App() {
               employees.length === 0 && (
                 <Typography
                   color="text.secondary"
-                  sx={{ py: 4, textAlign: "center" }}
+                  sx={{
+                    py: 4,
+                    textAlign: "center",
+                  }}
                 >
                   No employees found.
                 </Typography>
@@ -992,7 +1049,9 @@ function App() {
                                 variant="outlined"
                                 startIcon={<Edit />}
                                 onClick={() =>
-                                  handleEdit(employee)
+                                  handleEdit(
+                                    employee
+                                  )
                                 }
                                 disabled={loading}
                               >
