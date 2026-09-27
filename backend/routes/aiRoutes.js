@@ -1,202 +1,3 @@
-// // const express = require("express");
-// // const OpenAI = require("openai");
-
-// // const router = express.Router();
-
-// // const openai = new OpenAI({
-// //   apiKey: process.env.OPENAI_API_KEY,
-// // });
-
-// // router.post("/chat", async (req, res) => {
-// //   try {
-// //     const { message } = req.body;
-
-// //     if (!message || !message.trim()) {
-// //       return res.status(400).json({
-// //         message: "Message is required",
-// //       });
-// //     }
-
-// //     const response = await openai.responses.create({
-// //       model: "gpt-5.6-luna",
-// //       input: message,
-// //     });
-
-// //     res.json({
-// //       answer: response.output_text,
-// //     });
-// //   } catch (error) {
-// //     console.error("AI error:", error);
-
-// //     res.status(500).json({
-// //       message: "AI request failed",
-// //     });
-// //   }
-// // });
-
-// // module.exports = router;
-
-// const express = require("express");
-
-// const router = express.Router();
-
-// router.post("/chat", async (req, res) => {
-//   try {
-//     const { message } = req.body;
-
-//     if (!message || !message.trim()) {
-//       return res.status(400).json({
-//         message: "Message is required",
-//       });
-//     }
-
-//     const response = await fetch(
-//       "http://localhost:11434/api/chat",
-//       {
-//         method: "POST",
-//         headers: {
-//           "Content-Type": "application/json",
-//         },
-//         body: JSON.stringify({
-//           model: "llama3.2",
-//           messages: [
-//             {
-//               role: "user",
-//               content: message,
-//             },
-//           ],
-//           stream: false,
-//         }),
-//       }
-//     );
-
-//     if (!response.ok) {
-//       const errorText = await response.text();
-
-//       console.error("Ollama error:", errorText);
-
-//       return res.status(500).json({
-//         message: "Ollama request failed",
-//       });
-//     }
-
-//     const data = await response.json();
-
-//     res.json({
-//       answer: data.message.content,
-//     });
-//   } catch (error) {
-//     console.error("AI error:", error);
-
-//     res.status(500).json({
-//       message: "AI request failed",
-//     });
-//   }
-// });
-
-// module.exports = router;
-
-// const express = require("express");
-// const Employee = require("../models/Employee");
-
-// const router = express.Router();
-
-// // ===============================
-// // AI CHAT
-// // ===============================
-
-// router.post("/chat", async (req, res) => {
-//   try {
-//     const { message } = req.body;
-
-//     // Validate message
-//     if (!message || !message.trim()) {
-//       return res.status(400).json({
-//         message: "Message is required",
-//       });
-//     }
-
-//     // Get employees from MongoDB
-//     const employees = await Employee.find();
-
-//     // Convert employee data into simple text
-//     const employeeData = employees
-//       .map(
-//         (employee) =>
-//           `Name: ${employee.name}, Email: ${employee.email}, Skill: ${employee.skill}, Experience: ${employee.experience} years, Location: ${employee.location}`
-//       )
-//       .join("\n");
-
-//     // Create prompt for AI
-//     const prompt = `
-// You are an Employee Management AI Assistant.
-
-// Use the employee data below to answer the user's question.
-
-// Employee Data:
-// ${employeeData}
-
-// User Question:
-// ${message}
-
-// Rules:
-// - Answer only using the employee data when the question is about employees.
-// - If the requested information is not available, say that it is not available.
-// - Do not invent employee information.
-// - Keep the answer simple and clear.
-// `;
-
-//     // Call Ollama
-//     const response = await fetch(
-//       "http://localhost:11434/api/chat",
-//       {
-//         method: "POST",
-
-//         headers: {
-//           "Content-Type": "application/json",
-//         },
-
-//         body: JSON.stringify({
-//           model: "llama3.2",
-
-//           messages: [
-//             {
-//               role: "user",
-//               content: prompt,
-//             },
-//           ],
-
-//           stream: false,
-//         }),
-//       }
-//     );
-
-//     // Check Ollama response
-//     if (!response.ok) {
-//       const errorText = await response.text();
-
-//       console.error("Ollama error:", errorText);
-
-//       return res.status(500).json({
-//         message: "Ollama request failed",
-//       });
-//     }
-
-//     const data = await response.json();
-
-//     res.json({
-//       answer: data.message.content,
-//     });
-//   } catch (error) {
-//     console.error("AI error:", error);
-
-//     res.status(500).json({
-//       message: "AI request failed",
-//     });
-//   }
-// });
-
-// module.exports = router;
 
 const authMiddleware = require("../middleware/authMiddleWare");
 
@@ -207,7 +8,8 @@ const Employee = require("../models/Employee");
 const Conversation = require("../models/Conversation");
 
 const AuditLog = require("../models/AuditLog");
-
+const OLLAMA_BASE_URL =
+  process.env.OLLAMA_BASE_URL || "http://localhost:11434";
 const {
   searchEmployeesByVector,
 } = require("../utils/vectorSearch");
@@ -232,6 +34,12 @@ const router = express.Router();
 // Helper: Call Ollama
 // ==================================================
 
+// ==================================================
+// Helper: Call Ollama
+// ==================================================
+
+
+
 async function callOllama(messages, tools = undefined) {
   const body = {
     model: "llama3.2",
@@ -244,13 +52,12 @@ async function callOllama(messages, tools = undefined) {
   }
 
   const response = await fetch(
-    "http://localhost:11434/api/chat",
+    `${OLLAMA_BASE_URL}/api/chat`,
     {
       method: "POST",
 
       headers: {
-        "Content-Type":
-          "application/json",
+        "Content-Type": "application/json",
       },
 
       body: JSON.stringify(body),

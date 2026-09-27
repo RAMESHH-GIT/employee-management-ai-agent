@@ -1,7 +1,10 @@
+const OLLAMA_BASE_URL =
+  process.env.OLLAMA_BASE_URL || "http://localhost:11434";
+
 async function createEmbedding(text) {
   try {
     const response = await fetch(
-      "http://localhost:11434/api/embed",
+      `${OLLAMA_BASE_URL}/api/embed`,
       {
         method: "POST",
         headers: {
