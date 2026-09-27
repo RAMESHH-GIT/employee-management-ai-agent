@@ -12,7 +12,7 @@ import {
 
 import EmailIcon from "@mui/icons-material/Email";
 import LockIcon from "@mui/icons-material/Lock";
-
+const API_URL = process.env.REACT_APP_API_URL;
 function Login({ onLoginSuccess }) {
   const [loginData, setLoginData] = useState({
     email: "",
@@ -39,7 +39,7 @@ function Login({ onLoginSuccess }) {
       setLoginError("");
 
       const response = await fetch(
-        "http://localhost:5000/api/auth/login",
+        `${API_URL}/api/auth/login`,
         {
           method: "POST",
           headers: {

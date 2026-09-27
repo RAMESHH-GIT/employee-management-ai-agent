@@ -21,7 +21,7 @@ import {
   SmartToy,
   Person,
 } from "@mui/icons-material";
-
+const API_URL = process.env.REACT_APP_API_URL;
 function AIAssistant() {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
@@ -49,7 +49,7 @@ function AIAssistant() {
       const token = getToken();
 
       const response = await fetch(
-        "http://localhost:5000/api/ai/conversations",
+        `${API_URL}/api/ai/conversations`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -86,7 +86,7 @@ function AIAssistant() {
       const token = getToken();
 
       const response = await fetch(
-        `http://localhost:5000/api/ai/conversation/${selectedConversationId}`,
+        `${API_URL}/api/ai/conversation/${selectedConversationId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -144,7 +144,7 @@ function AIAssistant() {
       const token = getToken();
 
       const response = await fetch(
-        "http://localhost:5000/api/ai/chat",
+        `${API_URL}/api/ai/chat`,
         {
           method: "POST",
 

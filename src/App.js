@@ -38,7 +38,7 @@ import {
   PersonAdd,
   SmartToy,
 } from "@mui/icons-material";
-
+const API_URL = process.env.REACT_APP_API_URL;
 function App() {
   // AUTHENTICATION
   const [isLoggedIn, setIsLoggedIn] = useState(
@@ -129,7 +129,7 @@ function App() {
       params.append("limit", limit);
 
       const response = await fetch(
-        `http://localhost:5000/api/employees?${params.toString()}`,
+        `${API_URL}/api/employees?${params.toString()}`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -250,7 +250,7 @@ function App() {
 
       if (editingId) {
         response = await fetch(
-          `http://localhost:5000/api/employees/${editingId}`,
+          `${API_URL}/api/employees/${editingId}`,
           {
             method: "PUT",
             headers: {
@@ -262,7 +262,7 @@ function App() {
         );
       } else {
         response = await fetch(
-          "http://localhost:5000/api/employees",
+          `${API_URL}/api/employees`,
           {
             method: "POST",
             headers: {
@@ -335,7 +335,7 @@ function App() {
       setError("");
 
       const response = await fetch(
-        `http://localhost:5000/api/employees/${id}`,
+        `${API_URL}/api/employees/${id}`,
         {
           method: "DELETE",
           headers: {
