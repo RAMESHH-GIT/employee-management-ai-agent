@@ -3,7 +3,9 @@
 A full-stack Employee Management application built with **React, Node.js, Express, MongoDB, JWT Authentication, Role-Based Access Control (RBAC), and an AI Assistant**.
 
 The project demonstrates how a modern enterprise-style application can combine traditional employee management features with **Generative AI**, conversational history, embeddings/RAG concepts, authentication, authorization, Docker, and cloud deployment.
-
+ for demo login
+ ramesh@gmail.com
+ 123456
 ## 🚀 Live Application
 
 **Frontend:**
